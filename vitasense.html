@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VitaSense AI — Diabetes Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sky:#0EA5E9;--sky-dark:#0284C7;--sky-deeper:#0369A1;
+  --sky-50:#F0F9FF;--sky-100:#E0F2FE;--sky-200:#BAE6FD;
+  --teal:#0D9488;--teal-light:#F0FDFA;
+  --emerald:#059669;--emerald-light:#ECFDF5;--emerald-100:#D1FAE5;
+  --amber:#D97706;--amber-light:#FFFBEB;--amber-100:#FEF3C7;
+  --rose:#E11D48;--rose-light:#FFF1F2;--rose-100:#FFE4E6;
+  --white:#FFFFFF;
+  --slate-50:#F8FAFC;--slate-100:#F1F5F9;--slate-200:#E2E8F0;
+  --slate-300:#CBD5E1;--slate-400:#94A3B8;--slate-500:#64748B;
+  --slate-600:#475569;--slate-700:#334155;--slate-800:#1E293B;--slate-900:#0F172A;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-2xl:28px;--r-full:9999px;
+  --shadow-xs:0 1px 2px rgba(15,23,42,.05);
+  --shadow-sm:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
+  --shadow-md:0 4px 6px rgba(15,23,42,.07),0 2px 4px rgba(15,23,42,.04);
+  --shadow-lg:0 10px 15px rgba(15,23,42,.08),0 4px 6px rgba(15,23,42,.04);
+  --shadow-sky:0 4px 14px rgba(14,165,233,.25);
+  --sidebar-w:240px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--slate-50);color:var(--slate-800);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;display:flex}
+
+/* ═══════════════════════════════════════
+   SIDEBAR NAVIGATION
+═══════════════════════════════════════ */
+.sidebar{
+  width:var(--sidebar-w);
+  min-height:100vh;
+  background:var(--white);
+  border-right:1px solid var(--slate-200);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;z-index:300;
+  box-shadow:var(--shadow-sm);
+}
+.sidebar-brand{
+  padding:28px 22px 24px;
+  border-bottom:1px solid var(--slate-100);
+  display:flex;align-items:center;gap:11px;
+}
+.sidebar-logo{
+  width:40px;height:40px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--sky),var(--sky-dark));
+  border-radius:11px;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-sky);
+}
+.sidebar-logo svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sidebar-title{font-family:var(--font-display);font-size:1.15rem;font-weight:700;color:var(--slate-900);letter-spacing:-.02em;line-height:1.2}
+.sidebar-title em{font-style:normal;color:var(--sky)}
+.sidebar-title small{display:block;font-family:var(--font-body);font-size:.65rem;font-weight:500;color:var(--slate-400);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+
+.sidebar-nav{padding:18px 12px;flex:1}
+.sidebar-section-label{font-size:.62rem;font-weight:700;color:var(--slate-400);text-transform:uppercase;letter-spacing:.12em;padding:0 10px;margin-bottom:6px;margin-top:16px}
+.sidebar-section-label:first-child{margin-top:0}
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 12px;border-radius:var(--r-lg);
+  cursor:pointer;border:none;background:transparent;width:100%;text-align:left;
+  font-family:var(--font-body);font-size:.875rem;font-weight:500;color:var(--slate-500);
+  transition:all .18s;position:relative;margin-bottom:2px;
+}
+.nav-item:hover{background:var(--slate-50);color:var(--slate-800)}
+.nav-item.active{background:var(--sky-50);color:var(--sky-dark);font-weight:600}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:60%;background:var(--sky);border-radius:0 3px 3px 0;
+}
+.nav-icon{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:.95rem;
+  background:var(--slate-100);transition:all .18s;
+}
+.nav-item.active .nav-icon{background:var(--sky-100)}
+.nav-item:hover:not(.active) .nav-icon{background:var(--slate-200)}
+.nav-item-text{flex:1}
+.nav-badge{
+  background:var(--emerald);color:#fff;
+  font-size:.58rem;font-weight:700;padding:2px 6px;
+  border-radius:var(--r-full);letter-spacing:.03em;
+}
+
+.sidebar-divider{height:1px;background:var(--slate-100);margin:12px 22px}
+
+.sidebar-footer{padding:16px 22px 22px}
+.sidebar-status{
+  display:flex;align-items:center;gap:8px;
+  background:var(--emerald-light);border:1px solid var(--emerald-100);
+  border-radius:var(--r-lg);padding:10px 13px;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--emerald);flex-shrink:0;animation:pulseDot 2s infinite}
+@keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(5,150,105,.5)}70%{box-shadow:0 0 0 7px rgba(5,150,105,0)}100%{box-shadow:0 0 0 0 rgba(5,150,105,0)}}
+.status-info{flex:1}
+.status-info strong{font-size:.78rem;font-weight:600;color:var(--emerald);display:block}
+.status-info span{font-size:.68rem;color:var(--slate-500)}
+.sidebar-version{font-size:.65rem;color:var(--slate-400);text-align:center;margin-top:10px}
+
+/* ═══════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════ */
+.main-content{
+  margin-left:var(--sidebar-w);
+  flex:1;
+  min-width:0;
+}
+
+/* Top bar per page */
+.page-topbar{
+  background:var(--white);
+  border-bottom:1px solid var(--slate-200);
+  padding:0 2.5rem;
+  height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:var(--shadow-xs);
+}
+.topbar-breadcrumb{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--slate-400)}
+.topbar-breadcrumb strong{color:var(--slate-700);font-weight:600}
+.topbar-breadcrumb svg{width:14px;height:14px;stroke:var(--slate-300);fill:none;stroke-width:2}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--sky-50);border:1px solid var(--sky-200);
+  color:var(--sky-dark);font-size:.76rem;font-weight:600;
+  padding:5px 12px;border-radius:var(--r-full);
+}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--sky);animation:pulseDot2 2s infinite}
+@keyframes pulseDot2{0%{box-shadow:0 0 0 0 rgba(14,165,233,.5)}70%{box-shadow:0 0 0 7px rgba(14,165,233,0)}100%{box-shadow:0 0 0 0 rgba(14,165,233,0)}}
+.topbar-accuracy{font-size:.76rem;color:var(--slate-500);font-weight:500;background:var(--slate-50);border:1px solid var(--slate-200);padding:5px 11px;border-radius:var(--r-full)}
+
+/* Tab panels */
+.tab-panel{display:none;animation:fadeSlide .25s ease}
+.tab-panel.active{display:block}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.container{max-width:1100px;margin:0 auto;padding:0 2rem}
+
+/* ═══════════════════════════════════════
+   HOME PAGE
+═══════════════════════════════════════ */
+.home-hero{
+  background:var(--white);
+  padding:72px 2rem 88px;
+  position:relative;overflow:hidden;
+  border-bottom:1px solid var(--slate-200);
+}
+.home-hero::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(var(--slate-100) 1px,transparent 1px),
+    linear-gradient(90deg,var(--slate-100) 1px,transparent 1px);
+  background-size:48px 48px;opacity:.5;
+}
+.home-hero::after{
+  content:'';position:absolute;
+  width:700px;height:700px;
+  background:radial-gradient(circle,rgba(14,165,233,.09) 0%,transparent 70%);
+  top:-200px;right:-100px;pointer-events:none;
+}
+.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;position:relative;z-index:1}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--sky-50);border:1px solid var(--sky-200);
+  color:var(--sky-dark);font-size:.73rem;font-weight:600;
+  padding:5px 13px;border-radius:var(--r-full);margin-bottom:22px;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.hero-h1{
+  font-family:var(--font-display);
+  font-size:clamp(2.4rem,4vw,3.5rem);font-weight:800;
+  color:var(--slate-900);line-height:1.08;
+  letter-spacing:-.04em;margin-bottom:18px;
+}
+.hero-h1 .hl{color:var(--sky-dark);font-style:italic}
+.hero-desc{
+  color:var(--slate-500);font-size:.97rem;font-weight:400;
+  max-width:420px;line-height:1.8;margin-bottom:32px;
+}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn-primary{
+  background:var(--sky);color:#fff;border:none;
+  padding:12px 24px;border-radius:var(--r-lg);
+  font-family:var(--font-body);font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:all .22s;
+  box-shadow:var(--shadow-sky);letter-spacing:.01em;
+}
+.btn-primary:hover{background:var(--sky-dark);transform:translateY(-2px);box-shadow:0 8px 20px rgba(14,165,233,.35)}
+.btn-secondary{
+  background:var(--white);color:var(--slate-700);
+  border:1.5px solid var(--slate-200);
+  padding:12px 24px;border-radius:var(--r-lg);
+  font-family:var(--font-body);font-size:.88rem;font-weight:500;cursor:pointer;transition:all .22s;
+}
+.btn-secondary:hover{border-color:var(--sky);color:var(--sky-dark);background:var(--sky-50)}
+.hero-stats-card{
+  background:var(--white);border:1px solid var(--slate-200);
+  border-radius:var(--r-2xl);padding:28px;
+  box-shadow:var(--shadow-lg);
+}
+.hero-stats-title{font-size:.7rem;font-weight:700;color:var(--slate-400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px}
+.hero-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hero-stat{
+  background:var(--slate-50);border:1px solid var(--slate-200);
+  border-radius:var(--r-lg);padding:16px 14px;
+  transition:all .2s;
+}
+.hero-stat:hover{border-color:var(--sky-200);background:var(--sky-50)}
+.hs-num{font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--slate-900);line-height:1}
+.hs-num sup{font-size:.85rem;color:var(--sky)}
+.hs-label{font-size:.69rem;color:var(--slate-400);margin-top:4px;text-transform:uppercase;letter-spacing:.07em;font-weight:500}
+.hero-model-badge{
+  margin-top:16px;padding:12px 16px;
+  background:linear-gradient(135deg,var(--slate-900),var(--slate-800));
+  border-radius:var(--r-lg);display:flex;align-items:center;gap:10px;
+}
+.hmb-icon{font-size:1.2rem}
+.hmb-text strong{font-size:.82rem;font-weight:600;color:#fff;display:block}
+.hmb-text span{font-size:.72rem;color:rgba(255,255,255,.45)}
+
+/* How it works */
+.how-section{padding:72px 0;background:var(--slate-50)}
+.section-kicker{font-size:.7rem;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.section-heading{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--slate-900);line-height:1.15;letter-spacing:-.03em;margin-bottom:10px}
+.section-sub{color:var(--slate-500);font-size:.93rem;max-width:480px;line-height:1.75}
+.steps-row{display:grid;grid-template-columns:1fr 32px 1fr 32px 1fr;align-items:start;gap:0;margin-top:48px}
+.step-arrow{display:flex;align-items:center;justify-content:center;padding-top:28px}
+.step-arrow svg{width:18px;height:18px;fill:none;stroke:var(--slate-300);stroke-width:2;stroke-linecap:round}
+.step-box{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-xl);padding:24px;text-align:center;box-shadow:var(--shadow-xs)}
+.step-num{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--sky),var(--sky-dark));
+  color:#fff;font-family:var(--font-display);font-size:1.3rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;box-shadow:var(--shadow-sky);
+}
+.step-box h3{font-size:.9rem;font-weight:600;color:var(--slate-800);margin-bottom:6px}
+.step-box p{font-size:.8rem;color:var(--slate-500);line-height:1.65}
+
+/* Features */
+.features-section{padding:72px 0;background:var(--white);border-top:1px solid var(--slate-200)}
+.feat-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px;flex-wrap:wrap;gap:16px}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat-card{
+  background:var(--white);border:1px solid var(--slate-200);
+  border-radius:var(--r-xl);padding:24px;transition:all .22s;position:relative;overflow:hidden;
+}
+.feat-accent{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--sky),var(--teal));transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.feat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--sky-200)}
+.feat-card:hover .feat-accent{transform:scaleX(1)}
+.feat-card.hero-feat{background:linear-gradient(135deg,var(--slate-900),var(--slate-800));border-color:transparent}
+.feat-card.hero-feat .feat-accent{background:linear-gradient(90deg,var(--sky-200),var(--teal-light))}
+.feat-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:14px}
+.feat-card:not(.hero-feat) .feat-icon{background:var(--sky-50)}
+.feat-card.hero-feat .feat-icon{background:rgba(255,255,255,.09)}
+.feat-card h3{font-size:.91rem;font-weight:600;margin-bottom:6px;color:var(--slate-800)}
+.feat-card.hero-feat h3{color:#fff}
+.feat-card p{font-size:.81rem;color:var(--slate-500);line-height:1.65}
+.feat-card.hero-feat p{color:rgba(255,255,255,.5)}
+
+/* CTA */
+.cta-section{padding:72px 0;background:linear-gradient(135deg,var(--slate-900),var(--slate-800));text-align:center;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(14,165,233,.14) 0%,transparent 60%)}
+.cta-h2{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:#fff;margin-bottom:14px;letter-spacing:-.03em;position:relative;z-index:1}
+.cta-h2 span{color:var(--sky-200);font-style:italic}
+.cta-desc{color:rgba(255,255,255,.44);font-size:.93rem;margin-bottom:32px;line-height:1.7;position:relative;z-index:1}
+.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+.btn-cta-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.14);padding:12px 24px;border-radius:var(--r-lg);font-family:var(--font-body);font-size:.88rem;font-weight:500;cursor:pointer;transition:all .22s}
+.btn-cta-ghost:hover{background:rgba(255,255,255,.13)}
+
+/* ═══════════════════════════════════════
+   RANGES BAR
+═══════════════════════════════════════ */
+.ranges-topbar{background:var(--white);border-bottom:1px solid var(--slate-200);box-shadow:var(--shadow-xs)}
+.ranges-topbar-inner{padding:13px 0}
+.rtb-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:7px 0;user-select:none}
+.rtb-toggle-left h2{font-family:var(--font-body);font-size:.97rem;font-weight:600;color:var(--slate-800);display:flex;align-items:center;gap:9px}
+.rtb-ref-pill{font-size:.66rem;font-weight:600;color:var(--sky-dark);background:var(--sky-50);border:1px solid var(--sky-200);padding:2px 9px;border-radius:var(--r-full)}
+.rtb-toggle-left p{font-size:.75rem;color:var(--slate-400);margin-top:2px}
+.rtb-chevron{width:28px;height:28px;border-radius:50%;background:var(--slate-100);border:1px solid var(--slate-200);display:flex;align-items:center;justify-content:center;font-size:.68rem;transition:transform .3s;flex-shrink:0;color:var(--slate-500)}
+.rtb-chevron.open{transform:rotate(180deg)}
+.ranges-body-wrap{display:none}
+.ranges-body-wrap.open{display:block;padding-bottom:14px}
+.ranges-tabs-row{display:flex;gap:4px;margin:10px 0 0;flex-wrap:wrap}
+.rtab{padding:6px 13px;border-radius:var(--r-md);border:1px solid transparent;background:transparent;font-family:var(--font-body);font-size:.76rem;font-weight:500;color:var(--slate-500);cursor:pointer;transition:all .18s}
+.rtab:hover{background:var(--slate-100);color:var(--slate-800)}
+.rtab.active{background:var(--sky-50);border-color:var(--sky-200);color:var(--sky-dark);font-weight:600}
+.ranges-content{border-top:1px solid var(--slate-200);padding-top:13px;margin-top:4px}
+.ranges-intro{font-size:.79rem;color:var(--slate-600);margin-bottom:11px;padding:7px 11px;background:var(--sky-50);border-radius:var(--r-sm);border-left:3px solid var(--sky)}
+.rpanel{display:none}.rpanel.active{display:block}
+.ranges-table{width:100%;border-collapse:collapse;font-size:.76rem}
+.ranges-table thead tr{background:var(--slate-900)}
+.ranges-table thead th{padding:8px 10px;color:#fff;font-weight:500;text-align:left;font-size:.7rem;white-space:nowrap}
+.ranges-table thead th:first-child{border-radius:var(--r-sm) 0 0 0}.ranges-table thead th:last-child{border-radius:0 var(--r-sm) 0 0}
+.ranges-table tbody tr:nth-child(even){background:var(--slate-50)}
+.ranges-table tbody tr:hover{background:var(--sky-50)}
+.ranges-table tbody td{padding:7px 10px;color:var(--slate-800);border-bottom:1px solid var(--slate-100);vertical-align:middle}
+.ranges-table tbody td:first-child{font-weight:600;color:var(--slate-700);white-space:nowrap}
+.rt-normal{color:#065F46;font-weight:600}.rt-pre{color:#92400E;font-weight:600}.rt-high{color:#9F1239;font-weight:600}
+.rt-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.rt-dot-green{background:var(--emerald)}.rt-dot-amber{background:var(--amber)}.rt-dot-red{background:var(--rose)}
+.ranges-legend{display:flex;gap:12px;margin-top:9px;flex-wrap:wrap}
+.rl-item{display:flex;align-items:center;gap:5px;font-size:.71rem;color:var(--slate-500)}
+.ranges-note{margin-top:9px;padding:7px 11px;background:var(--amber-light);border-radius:var(--r-sm);border-left:3px solid var(--amber);font-size:.74rem;color:#92400E}
+
+/* ═══════════════════════════════════════
+   PREDICT SECTIONS WRAPPER
+═══════════════════════════════════════ */
+.predict-wrap{padding:24px 0 52px;display:flex;flex-direction:column;gap:20px}
+
+/* ═══════════════════════════════════════
+   CHATBOT — FULLY LIGHT
+═══════════════════════════════════════ */
+.chatbot-card{
+  background:var(--white);
+  border:1px solid var(--slate-200);
+  border-radius:var(--r-2xl);
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+}
+.chatbot-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;
+  border-bottom:1px solid var(--slate-100);
+  background:var(--white);
+}
+.chatbot-brand{display:flex;align-items:center;gap:13px}
+.chatbot-avatar{
+  width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(135deg,var(--sky-50),var(--sky-100));
+  border:1.5px solid var(--sky-200);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+}
+.chatbot-brand-text h3{font-size:.97rem;font-weight:600;color:var(--slate-800)}
+.chatbot-brand-text p{font-size:.77rem;color:var(--slate-400);margin-top:1px}
+.chatbot-online{
+  display:flex;align-items:center;gap:6px;
+  background:var(--emerald-light);border:1px solid var(--emerald-100);
+  color:var(--emerald);font-size:.74rem;font-weight:600;
+  padding:5px 12px;border-radius:var(--r-full);
+}
+.chat-online-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);animation:pulseDot 2s infinite}
+.chatbot-body{padding:18px 24px}
+.chat-input-wrap{
+  display:flex;gap:9px;align-items:center;
+  background:var(--slate-50);
+  border:1.5px solid var(--slate-200);
+  border-radius:var(--r-xl);padding:6px 6px 6px 16px;
+  transition:all .18s;
+}
+.chat-input-wrap:focus-within{border-color:var(--sky);background:var(--white);box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+.chat-input-wrap input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-family:var(--font-body);font-size:.88rem;color:var(--slate-800);
+}
+.chat-input-wrap input::placeholder{color:var(--slate-400)}
+.chat-send{
+  width:38px;height:38px;flex-shrink:0;
+  background:var(--sky);border:none;border-radius:var(--r-md);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .18s;box-shadow:var(--shadow-sky);
+}
+.chat-send:hover{background:var(--sky-dark);transform:scale(1.05)}
+.chat-send svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round}
+.quick-pills{padding:11px 0 3px;display:flex;gap:6px;flex-wrap:wrap}
+.qpill{
+  padding:5px 11px;background:var(--white);border:1px solid var(--slate-200);
+  border-radius:var(--r-full);font-size:.74rem;font-weight:500;color:var(--slate-500);
+  cursor:pointer;transition:all .18s;font-family:var(--font-body);
+}
+.qpill:hover{background:var(--sky-50);border-color:var(--sky-200);color:var(--sky-dark)}
+.chat-collapse{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.chat-collapse.open{max-height:340px}
+.chat-messages{
+  height:280px;overflow-y:auto;padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+  background:var(--slate-50);border-radius:var(--r-xl);
+  border:1px solid var(--slate-200);margin-top:11px;
+}
+.chat-messages::-webkit-scrollbar{width:3px}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--slate-200);border-radius:2px}
+.chat-bubble{
+  max-width:80%;padding:10px 14px;
+  border-radius:16px;font-size:.84rem;line-height:1.6;
+  animation:bubbleIn .2s ease;
+}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.chat-bubble.bot{
+  background:var(--white);color:var(--slate-700);
+  border:1px solid var(--slate-200);
+  border-bottom-left-radius:4px;align-self:flex-start;
+  white-space:pre-line;box-shadow:var(--shadow-xs);
+}
+.chat-bubble.user{
+  background:var(--sky);color:#fff;
+  border-bottom-right-radius:4px;align-self:flex-end;
+  box-shadow:0 2px 8px rgba(14,165,233,.28);
+}
+.chat-bubble.bot .bubble-title{font-weight:600;color:var(--slate-800);margin-bottom:3px;font-size:.86rem}
+.typing-indicator{display:flex;gap:4px;align-items:center;padding:2px 0}
+.typing-dot{width:5px;height:5px;background:var(--slate-300);border-radius:50%;animation:typeBounce .9s infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes typeBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* ═══════════════════════════════════════
+   FORM CARD
+═══════════════════════════════════════ */
+.form-card{
+  background:var(--white);border:1px solid var(--slate-200);
+  border-radius:var(--r-2xl);box-shadow:var(--shadow-md);padding:24px;
+}
+.form-card-top{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:20px;padding-bottom:16px;
+  border-bottom:1px solid var(--slate-100);
+}
+.form-card-icon{
+  width:46px;height:46px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--sky),var(--sky-dark));
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  box-shadow:var(--shadow-sky);
+}
+.form-card-top h2{font-size:1.05rem;font-weight:600;color:var(--slate-800)}
+.form-card-top p{font-size:.77rem;color:var(--slate-400);margin-top:2px}
+.fields-section-label{
+  font-size:.67rem;font-weight:700;color:var(--sky-dark);
+  text-transform:uppercase;letter-spacing:.1em;
+  margin-bottom:9px;display:flex;align-items:center;gap:8px;
+}
+.fields-section-label::after{content:'';flex:1;height:1px;background:var(--sky-200)}
+
+/* Row 1: 5 required fields */
+.form-row-required{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:14px;
+  margin-bottom:14px;
+}
+/* Row 2: 3 optional fields */
+.form-row-optional{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-bottom:16px;
+  padding-top:14px;
+  border-top:1px dashed var(--slate-200);
+}
+/* Row 3: Action bar */
+.form-action-bar{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  background:var(--slate-50);
+  border:1px solid var(--slate-200);
+  border-radius:var(--r-lg);
+  padding:14px 18px;
+}
+.form-action-bar-left{
+  flex:1;
+  display:flex;align-items:center;gap:10px;
+}
+.form-action-bar-icon{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--sky-50);border:1px solid var(--sky-200);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;
+}
+.form-action-bar-text strong{font-size:.82rem;font-weight:600;color:var(--slate-700);display:block}
+.form-action-bar-text span{font-size:.72rem;color:var(--slate-400)}
+.form-action-bar-btns{display:flex;gap:10px;align-items:center;flex-shrink:0}
+
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field label{font-size:.72rem;font-weight:600;color:var(--slate-500);white-space:nowrap;display:flex;align-items:center;gap:4px}
+.req{color:var(--rose)}
+.opt-tag{background:var(--slate-100);color:var(--slate-400);font-size:.59rem;font-weight:500;padding:1px 5px;border-radius:4px;border:1px dashed var(--slate-300)}
+.form-field input{
+  width:100%;padding:10px 13px;
+  border:1.5px solid var(--slate-200);border-radius:var(--r-sm);
+  font-family:var(--font-body);font-size:.85rem;color:var(--slate-800);
+  background:var(--white);transition:all .18s;outline:none;
+}
+.form-field input:focus{border-color:var(--sky);background:var(--white);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
+.form-field input::placeholder{color:var(--slate-300);font-size:.8rem}
+.form-field .fhint{font-size:.67rem;color:var(--slate-400);margin-top:1px}
+
+.btn-analyse{
+  padding:11px 28px;
+  background:var(--sky);color:#fff;border:none;border-radius:var(--r-md);
+  font-family:var(--font-body);font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:all .22s;box-shadow:var(--shadow-sky);
+  white-space:nowrap;display:flex;align-items:center;gap:7px;
+}
+.btn-analyse:hover{background:var(--sky-dark);transform:translateY(-1px);box-shadow:0 6px 18px rgba(14,165,233,.42)}
+.btn-analyse:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-reset{
+  padding:11px 20px;background:var(--white);color:var(--slate-500);
+  border:1.5px solid var(--slate-200);border-radius:var(--r-md);
+  font-family:var(--font-body);font-size:.88rem;font-weight:500;
+  cursor:pointer;transition:all .18s;white-space:nowrap;
+  display:flex;align-items:center;gap:6px;
+}
+.btn-reset:hover{border-color:var(--slate-300);background:var(--slate-50);color:var(--slate-700)}
+.validation-error{background:var(--rose-light);border:1px solid var(--rose-100);border-radius:var(--r-sm);padding:9px 13px;margin-top:11px;font-size:.8rem;color:#9F1239;display:none}
+.validation-error ul{padding-left:13px}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════
+   RESULTS
+═══════════════════════════════════════ */
+.empty-state{
+  background:var(--white);border:2px dashed var(--slate-200);
+  border-radius:var(--r-2xl);padding:64px 28px;text-align:center;
+}
+.empty-icon{font-size:3rem;margin-bottom:14px;opacity:.25}
+.empty-state h3{font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--slate-800);margin-bottom:7px}
+.empty-state p{color:var(--slate-400);font-size:.84rem;max-width:360px;margin:0 auto}
+.results-wrapper{display:none;flex-direction:column;gap:18px}
+
+/* Result hero */
+.result-hero-row{
+  background:var(--white);border:1px solid var(--slate-200);
+  border-radius:var(--r-2xl);padding:22px 26px;
+  box-shadow:var(--shadow-sm);
+  display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;
+}
+.rh-badge-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.rh-badge{width:66px;height:66px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.9rem}
+.rh-badge.diabetic{background:var(--rose-light);border:1.5px solid var(--rose-100)}
+.rh-badge.not-diabetic{background:var(--emerald-light);border:1.5px solid var(--emerald-100)}
+.rh-prediction{font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--slate-900);text-align:center}
+.rh-cat{font-size:.72rem;color:var(--slate-400);text-align:center;margin-top:2px}
+.urgency-pill{display:inline-flex;align-items:center;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:var(--r-full);margin-top:3px}
+.urgency-now{background:var(--rose-light);color:var(--rose);border:1px solid var(--rose-100)}
+.urgency-soon{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-100)}
+.urgency-routine{background:var(--emerald-light);color:var(--emerald);border:1px solid var(--emerald-100)}
+.rh-meter-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.rh-meter-top span{font-size:.79rem;font-weight:600;color:var(--slate-500)}
+.risk-big{font-family:var(--font-display);font-size:2.4rem;font-weight:700;color:var(--slate-900);line-height:1}
+.risk-big small{font-family:var(--font-body);font-size:.87rem;color:var(--slate-400)}
+.risk-track{height:13px;background:var(--slate-100);border-radius:var(--r-full);overflow:hidden;border:1px solid var(--slate-200)}
+.risk-fill{height:100%;border-radius:var(--r-full);transition:width 1.2s cubic-bezier(.4,0,.2,1);width:0}
+.risk-ticks{display:flex;justify-content:space-between;margin-top:5px}
+.risk-tick{font-size:.65rem;color:var(--slate-400)}
+.rec-msg-bar{border-radius:var(--r-sm);padding:9px 13px;font-size:.83rem;font-weight:500;border-left:3px solid;margin-top:10px}
+.rec-msg-bar.high{background:var(--rose-light);border-color:var(--rose);color:#9F1239}
+.rec-msg-bar.medium{background:var(--amber-light);border-color:var(--amber);color:#92400E}
+.rec-msg-bar.low{background:var(--emerald-light);border-color:var(--emerald);color:#065F46}
+.rh-conf-col{display:flex;flex-direction:column;align-items:center;gap:6px}
+.conf-dial{position:relative;width:68px;height:68px}
+.conf-dial svg{transform:rotate(-90deg)}
+.conf-score-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:.97rem;font-weight:700;color:var(--slate-900)}
+.conf-label{font-size:.7rem;font-weight:600;color:var(--slate-500);text-align:center}
+.conf-badge{font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:var(--r-full);display:inline-block}
+.conf-high{background:var(--emerald-light);color:var(--emerald);border:1px solid var(--emerald-100)}
+.conf-mid{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-100)}
+.conf-low{background:var(--rose-light);color:var(--rose);border:1px solid var(--rose-100)}
+.conf-reason-txt{font-size:.7rem;color:var(--slate-400);text-align:center;max-width:130px;line-height:1.4;margin-top:2px}
+
+/* Metrics row */
+.metrics-row{display:grid;grid-template-columns:repeat(6,1fr);gap:11px}
+.metric-tile{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-lg);padding:13px 11px;box-shadow:var(--shadow-xs);text-align:center}
+.m-val{font-weight:700;font-size:.97rem;color:var(--slate-900);margin-bottom:2px}
+.m-label{font-size:.64rem;color:var(--slate-400);text-transform:uppercase;letter-spacing:.06em}
+.m-badge{font-size:.67rem;font-weight:600;padding:2px 7px;border-radius:var(--r-full);display:inline-block;margin-top:4px}
+.badge-green{background:var(--emerald-light);color:var(--emerald);border:1px solid var(--emerald-100)}
+.badge-amber{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-100)}
+.badge-red{background:var(--rose-light);color:var(--rose);border:1px solid var(--rose-100)}
+.badge-blue{background:var(--sky-50);color:var(--sky-dark);border:1px solid var(--sky-200)}
+
+/* Breakdown */
+.breakdown-row{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-2xl);padding:20px 24px;box-shadow:var(--shadow-xs)}
+.breakdown-title{font-size:.71rem;font-weight:700;color:var(--slate-400);text-transform:uppercase;letter-spacing:.09em;margin-bottom:13px}
+.bd-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.bd-head{display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:5px}
+.bd-head span:first-child{color:var(--slate-500)}.bd-head span:last-child{font-weight:700;color:var(--slate-800)}
+.bd-track{height:7px;background:var(--slate-100);border-radius:var(--r-full);overflow:hidden}
+.bd-fill{height:100%;border-radius:var(--r-full);transition:width 1.4s cubic-bezier(.4,0,.2,1);width:0}
+
+/* Diet + Exercise */
+.de-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.de-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-2xl);box-shadow:var(--shadow-xs);overflow:hidden}
+.de-card-hdr{padding:16px 20px 13px;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;gap:11px}
+.de-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.diet-icon-bg{background:linear-gradient(135deg,var(--emerald-light),var(--emerald-100))}
+.ex-icon-bg{background:linear-gradient(135deg,var(--amber-light),var(--amber-100))}
+.de-card-hdr h3{font-size:.92rem;font-weight:600;color:var(--slate-800)}
+.de-card-hdr p{font-size:.75rem;color:var(--slate-400);margin-top:2px}
+.de-card-body{padding:16px 20px}
+.food-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.food-list h4{font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.food-list.eat h4{color:var(--emerald)}.food-list.avoid h4{color:var(--rose)}
+.food-item{display:flex;gap:7px;margin-bottom:6px;font-size:.8rem}
+.fi-icon{font-size:.82rem;flex-shrink:0;margin-top:1px}
+.fi-name{font-weight:600;color:var(--slate-800)}.fi-reason{font-size:.71rem;color:var(--slate-400);margin-top:1px}
+.exercise-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.exercise-item{background:var(--slate-50);border-radius:var(--r-sm);padding:10px;border:1px solid var(--slate-200)}
+.exercise-item h4{font-size:.84rem;font-weight:600;color:var(--slate-800);margin-bottom:5px}
+.ex-meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:3px}
+.et{font-size:.68rem;font-weight:500;padding:2px 7px;border-radius:var(--r-full)}
+.et-d{background:var(--sky-50);color:var(--sky-dark);border:1px solid var(--sky-200)}
+.et-f{background:var(--emerald-light);color:var(--emerald);border:1px solid var(--emerald-100)}
+.et-i{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-100)}
+.ex-benefit{font-size:.74rem;color:var(--slate-400)}
+.ex-tips-box{background:var(--amber-light);border-radius:var(--r-sm);padding:10px 12px;border:1px solid var(--amber-100)}
+.ex-tips-box h4{font-size:.69rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.ex-tips-box ul{padding-left:13px}.ex-tips-box li{font-size:.77rem;color:#78350F;margin-bottom:3px}
+
+/* Lifestyle + Monitoring */
+.ls-mon-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ls-card,.mon-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-2xl);box-shadow:var(--shadow-xs);overflow:hidden}
+.ls-hdr,.mon-hdr{padding:14px 20px 11px;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;gap:9px}
+.ls-hdr-icon,.mon-hdr-icon{width:33px;height:33px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.88rem}
+.ls-hdr-icon{background:linear-gradient(135deg,#F5F3FF,#EDE9FE)}.mon-hdr-icon{background:linear-gradient(135deg,var(--sky-50),var(--sky-100))}
+.ls-hdr h3,.mon-hdr h3{font-size:.9rem;font-weight:600;color:var(--slate-800)}
+.ls-body,.mon-body{padding:14px 20px}
+.lifestyle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lifestyle-item{background:var(--slate-50);border-radius:var(--r-sm);padding:10px;border:1px solid var(--slate-200)}
+.lifestyle-item .li-icon{font-size:.88rem;margin-bottom:4px}
+.lifestyle-item .li-label{font-size:.64rem;font-weight:700;color:var(--sky-dark);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.lifestyle-item .li-text{font-size:.76rem;color:var(--slate-500);line-height:1.5}
+.monitoring-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.mon-item{background:var(--slate-50);border-radius:var(--r-sm);padding:9px;border:1px solid var(--slate-200)}
+.mon-item .mon-label{font-size:.64rem;font-weight:700;color:var(--slate-400);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.mon-item .mon-val{font-size:.79rem;font-weight:600;color:var(--slate-800)}
+.tests-list-wrap{margin-bottom:10px}
+.tests-list-wrap h4{font-size:.67rem;font-weight:700;color:var(--slate-500);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.test-badge{display:inline-block;background:var(--sky-50);color:var(--sky-dark);font-size:.7rem;font-weight:500;padding:3px 8px;border-radius:var(--r-full);margin:2px;border:1px solid var(--sky-200)}
+.targets-table{width:100%;border-collapse:collapse;font-size:.76rem}
+.targets-table th{background:var(--slate-100);padding:6px 9px;text-align:left;font-weight:600;color:var(--slate-500);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em}
+.targets-table td{padding:6px 9px;border-bottom:1px solid var(--slate-100);color:var(--slate-800)}
+
+/* Meal + Health Tips */
+.mh-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.mt-card,.ht-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-2xl);box-shadow:var(--shadow-xs);overflow:hidden}
+.mt-hdr,.ht-hdr{padding:14px 20px 11px;border-bottom:1px solid var(--slate-100);display:flex;align-items:center;gap:9px}
+.mt-hdr-icon{width:33px;height:33px;border-radius:9px;background:linear-gradient(135deg,var(--sky-50),var(--sky-100));display:flex;align-items:center;justify-content:center;font-size:.88rem}
+.ht-hdr-icon{width:33px;height:33px;border-radius:9px;background:linear-gradient(135deg,var(--emerald-light),var(--emerald-100));display:flex;align-items:center;justify-content:center;font-size:.88rem}
+.mt-hdr h3,.ht-hdr h3{font-size:.9rem;font-weight:600;color:var(--slate-800)}
+.mt-body,.ht-body{padding:14px 20px}
+.meal-tips-list{padding:0;list-style:none}
+.meal-tips-list li{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--slate-100);font-size:.8rem;color:var(--slate-500)}
+.meal-tips-list li:last-child{border-bottom:none}
+.meal-tips-list li::before{content:'⏰';font-size:.78rem;flex-shrink:0;margin-top:1px}
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.tip-item{display:flex;gap:8px;padding:9px;background:var(--slate-50);border-radius:var(--r-sm);border:1px solid var(--slate-200)}
+.tip-num{width:20px;height:20px;border-radius:50%;background:var(--sky);color:#fff;font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tip-text{font-size:.76rem;color:var(--slate-500);line-height:1.5}
+.disclaimer-bar{background:var(--sky-50);border:1px solid var(--sky-200);border-radius:var(--r-sm);padding:10px 14px;font-size:.75rem;color:var(--sky-deeper);display:none}
+
+/* ═══════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════ */
+.dashboard{padding:32px 0 52px}
+.dashboard-top{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-xl);padding:20px 20px;box-shadow:var(--shadow-xs);position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--sky),var(--teal))}
+.sc-label{font-size:.7rem;font-weight:700;color:var(--slate-400);text-transform:uppercase;letter-spacing:.09em;margin-bottom:5px}
+.sc-val{font-family:var(--font-display);font-size:1.85rem;font-weight:700;color:var(--slate-900);line-height:1}
+.sc-sub{font-size:.74rem;color:var(--slate-400);margin-top:4px}
+.sc-icon{font-size:1.4rem;float:right;opacity:.17}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--r-xl);padding:20px;box-shadow:var(--shadow-xs)}
+.chart-card h3{font-size:.84rem;font-weight:600;color:var(--slate-700);margin-bottom:13px}
+.chart-wrap{position:relative;height:195px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div>
+      <div class="sidebar-title">Vita<em>Sense</em> AI<small>Diabetes Prediction</small></div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Navigation</div>
+
+    <button class="nav-item active" id="nav-home" onclick="showTab('home')">
+      <div class="nav-icon">🏠</div>
+      <span class="nav-item-text">Home</span>
+    </button>
+
+    <button class="nav-item" id="nav-predict" onclick="showTab('predict')">
+      <div class="nav-icon">🔬</div>
+      <span class="nav-item-text">Predict</span>
+      <span class="nav-badge">AI</span>
+    </button>
+
+    <button class="nav-item" id="nav-dashboard" onclick="showTab('dashboard',true)">
+      <div class="nav-icon">📊</div>
+      <span class="nav-item-text">Dashboard</span>
+    </button>
+
+    <div class="sidebar-section-label">Quick Access</div>
+
+    <button class="nav-item" onclick="showTab('predict');setTimeout(()=>document.getElementById('chat-input').focus(),300)">
+      <div class="nav-icon">💬</div>
+      <span class="nav-item-text">AI Assistant</span>
+    </button>
+
+    <button class="nav-item" onclick="showTab('predict');setTimeout(()=>document.getElementById('glucose').focus(),300)">
+      <div class="nav-icon">📋</div>
+      <span class="nav-item-text">Health Form</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-status">
+      <div class="status-dot"></div>
+      <div class="status-info">
+        <strong>Model Active</strong>
+        <span>98.2% accuracy</span>
+      </div>
+    </div>
+    <div class="sidebar-version">VitaSense AI v2.0 · ROC-AUC 0.9975</div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════ -->
+<div class="main-content">
+
+<!-- ───────────────── TAB: HOME ───────────────── -->
+<div id="tab-home" class="tab-panel active">
+
+  <div class="page-topbar">
+    <div class="topbar-breadcrumb">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <strong>Home</strong>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-pill"><span class="pulse-dot"></span>AI-Powered</div>
+      <div class="topbar-accuracy">98.2% Accuracy</div>
+    </div>
+  </div>
+
+  <section class="home-hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-left">
+          <div class="hero-eyebrow"><span class="pulse-dot"></span>Clinical-Grade AI Assessment</div>
+          <h1 class="hero-h1">Predict Your<br/>Diabetes Risk<br/><span class="hl">in Seconds</span></h1>
+          <p class="hero-desc">Advanced machine learning with 98.2% accuracy. Get personalised diet, exercise and lifestyle recommendations instantly — no lab visit required.</p>
+          <div class="hero-btns">
+            <button class="btn-primary" onclick="showTab('predict')">Start Risk Assessment →</button>
+            <button class="btn-secondary" onclick="showTab('dashboard',true)">View Dashboard</button>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-stats-card">
+            <div class="hero-stats-title">Model Performance</div>
+            <div class="hero-stats-grid">
+              <div class="hero-stat"><div class="hs-num">98.2<sup>%</sup></div><div class="hs-label">Accuracy</div></div>
+              <div class="hero-stat"><div class="hs-num">0.9975</div><div class="hs-label">ROC-AUC</div></div>
+              <div class="hero-stat"><div class="hs-num">5,000</div><div class="hs-label">Records</div></div>
+              <div class="hero-stat"><div class="hs-num">16<sup>+</sup></div><div class="hs-label">AI Features</div></div>
+            </div>
+            <div class="hero-model-badge">
+              <div class="hmb-icon">🤖</div>
+              <div class="hmb-text">
+                <strong>Voting Ensemble Model</strong>
+                <span>Random Forest + Gradient Boosting</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-section">
+    <div class="container">
+      <div class="section-kicker">How It Works</div>
+      <h2 class="section-heading">Three Steps to Know Your Risk</h2>
+      <p class="section-sub">No lab visit needed. Enter your basic health numbers and get an AI-powered assessment instantly.</p>
+      <div class="steps-row">
+        <div class="step-box">
+          <div class="step-num">1</div>
+          <h3>Enter Health Data</h3>
+          <p>Provide glucose, BMI, blood pressure, age and other key parameters in the clean input form.</p>
+        </div>
+        <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <div class="step-box">
+          <div class="step-num">2</div>
+          <h3>AI Analyses Risk</h3>
+          <p>Voting Ensemble of Random Forest + Gradient Boosting calculates your exact diabetes risk percentage.</p>
+        </div>
+        <div class="step-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <div class="step-box">
+          <div class="step-num">3</div>
+          <h3>Get Your Action Plan</h3>
+          <p>Receive personalised diet, exercise, lifestyle and monitoring recommendations — immediately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-section">
+    <div class="container">
+      <div class="feat-hdr">
+        <div>
+          <div class="section-kicker">Full Platform</div>
+          <h2 class="section-heading">Everything in One Place</h2>
+          <p class="section-sub" style="margin:0">A complete diabetes prediction and education system built on clinical-grade AI.</p>
+        </div>
+      </div>
+      <div class="feat-grid">
+        <div class="feat-card hero-feat"><div class="feat-accent"></div>
+          <div class="feat-icon">🤖</div>
+          <h3>Voting Ensemble AI</h3>
+          <p>Random Forest and Gradient Boosting working together for 98.2% accuracy. Validated on 5,000 patient records with 0.9975 ROC-AUC.</p>
+        </div>
+        <div class="feat-card"><div class="feat-accent"></div>
+          <div class="feat-icon">🥗</div>
+          <h3>Personalised Diet Plans</h3>
+          <p>Foods to eat and avoid based on your exact glucose, BMI and risk category, with meal timing tips.</p>
+        </div>
+        <div class="feat-card"><div class="feat-accent"></div>
+          <div class="feat-icon">🏃</div>
+          <h3>Exercise Prescriptions</h3>
+          <p>Duration, frequency and intensity tailored to your risk level — from gentle walking to strength training.</p>
+        </div>
+        <div class="feat-card"><div class="feat-accent"></div>
+          <div class="feat-icon">💬</div>
+          <h3>Diabetes AI Chatbot</h3>
+          <p>Ask about symptoms, HbA1c, medications, emergencies and more. Expert answers across 20+ topics.</p>
+        </div>
+        <div class="feat-card"><div class="feat-accent"></div>
+          <div class="feat-icon">📋</div>
+          <h3>Monitoring Schedule</h3>
+          <p>Exactly when to check blood sugar, get HbA1c tests and visit specialists — based on your risk.</p>
+        </div>
+        <div class="feat-card"><div class="feat-accent"></div>
+          <div class="feat-icon">📊</div>
+          <h3>Analytics Dashboard</h3>
+          <p>Track your prediction history, risk distribution and health score trends through interactive charts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="container">
+      <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:.71rem;font-weight:600;padding:5px 12px;border-radius:var(--r-full);margin-bottom:18px;letter-spacing:.06em">🩺 FREE · NO LOGIN · NO LAB</div>
+      <h2 class="cta-h2">Ready to Check Your <span>Diabetes Risk?</span></h2>
+      <p class="cta-desc">Get your full personalised report with diet, exercise and lifestyle recommendations in under 60 seconds.</p>
+      <div class="cta-btns">
+        <button class="btn-primary" onclick="showTab('predict')">Start Free Assessment →</button>
+        <button class="btn-cta-ghost" onclick="showTab('dashboard',true)">📊 View Dashboard</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ───────────────── TAB: PREDICT ───────────────── -->
+<div id="tab-predict" class="tab-panel">
+
+  <div class="page-topbar">
+    <div class="topbar-breadcrumb">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      <strong>Predict</strong>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-pill"><span class="pulse-dot"></span>Model Ready</div>
+    </div>
+  </div>
+
+  <!-- Ranges reference bar -->
+  <div class="ranges-topbar">
+    <div class="container ranges-topbar-inner">
+      <div class="rtb-toggle" onclick="toggleRanges()">
+        <div class="rtb-toggle-left">
+          <h2>📊 Normal Parameter Ranges by Age Group <span class="rtb-ref-pill">Reference Guide</span></h2>
+          <p>Medically accepted reference values — consult these while filling the form</p>
+        </div>
+        <div class="rtb-chevron open" id="rtb-chevron">▼</div>
+      </div>
+      <div class="ranges-body-wrap open" id="ranges-body-wrap">
+        <div class="ranges-tabs-row">
+          <button class="rtab active" onclick="showRTab('glucose',this)">🩸 Glucose</button>
+          <button class="rtab" onclick="showRTab('bp',this)">💓 Blood Pressure</button>
+          <button class="rtab" onclick="showRTab('bmi',this)">⚖️ BMI</button>
+          <button class="rtab" onclick="showRTab('insulin',this)">💉 Insulin</button>
+          <button class="rtab" onclick="showRTab('hba1c',this)">🧪 HbA1c</button>
+          <button class="rtab" onclick="showRTab('other',this)">📋 Other Params</button>
+        </div>
+        <div class="ranges-content">
+          <div class="rpanel active" id="rpanel-glucose">
+            <div class="ranges-intro">Fasting blood glucose (after 8 hours fasting). Units: <strong>mg/dL</strong>. Post-meal values measured 2 hours after eating.</div>
+            <table class="ranges-table"><thead><tr><th>Age Group</th><th>Fasting Normal</th><th>Pre-diabetes</th><th>Diabetes</th><th>Post-meal Normal</th><th>Post-meal Diabetes</th></tr></thead>
+            <tbody>
+              <tr><td>Children (&lt;12)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>70–100</td><td class="rt-pre"><span class="rt-dot rt-dot-amber"></span>100–125</td><td class="rt-high"><span class="rt-dot rt-dot-red"></span>≥ 126</td><td class="rt-normal">&lt; 140</td><td class="rt-high">≥ 200</td></tr>
+              <tr><td>Teenagers (13–17)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>70–100</td><td class="rt-pre"><span class="rt-dot rt-dot-amber"></span>100–125</td><td class="rt-high"><span class="rt-dot rt-dot-red"></span>≥ 126</td><td class="rt-normal">&lt; 140</td><td class="rt-high">≥ 200</td></tr>
+              <tr><td>Young Adults (18–35)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>70–99</td><td class="rt-pre"><span class="rt-dot rt-dot-amber"></span>100–125</td><td class="rt-high"><span class="rt-dot rt-dot-red"></span>≥ 126</td><td class="rt-normal">&lt; 140</td><td class="rt-high">≥ 200</td></tr>
+              <tr><td>Adults (36–59)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>70–99</td><td class="rt-pre"><span class="rt-dot rt-dot-amber"></span>100–125</td><td class="rt-high"><span class="rt-dot rt-dot-red"></span>≥ 126</td><td class="rt-normal">&lt; 140</td><td class="rt-high">≥ 200</td></tr>
+              <tr><td>Elderly (60+)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>80–100</td><td class="rt-pre"><span class="rt-dot rt-dot-amber"></span>100–125</td><td class="rt-high"><span class="rt-dot rt-dot-red"></span>≥ 126</td><td class="rt-normal">&lt; 150</td><td class="rt-high">≥ 200</td></tr>
+              <tr><td>Diabetic Target</td><td colspan="2" class="rt-normal"><span class="rt-dot rt-dot-green"></span>80–130 (before meals)</td><td colspan="3" class="rt-pre">&lt; 180 (2 hrs after meals)</td></tr>
+            </tbody></table>
+            <div class="ranges-legend"><div class="rl-item"><span class="rt-dot rt-dot-green"></span>Normal</div><div class="rl-item"><span class="rt-dot rt-dot-amber"></span>Prediabetes</div><div class="rl-item"><span class="rt-dot rt-dot-red"></span>Diabetes</div></div>
+            <div class="ranges-note">⚠️ Elderly targets may be individually adjusted (80–150 mg/dL). Follow your doctor's advice.</div>
+          </div>
+          <div class="rpanel" id="rpanel-bp">
+            <div class="ranges-intro">Diastolic blood pressure (lower number). Units: <strong>mmHg</strong>. Measured at rest.</div>
+            <table class="ranges-table"><thead><tr><th>Age Group</th><th>Normal (Diastolic)</th><th>Elevated</th><th>High (Stage 1)</th><th>High (Stage 2)</th><th>Systolic Normal</th></tr></thead>
+            <tbody>
+              <tr><td>Children (&lt;12)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>&lt; 70</td><td class="rt-pre">70–79</td><td class="rt-high">80–89</td><td class="rt-high">≥ 90</td><td class="rt-normal">&lt; 110</td></tr>
+              <tr><td>Teenagers (13–17)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>&lt; 75</td><td class="rt-pre">75–79</td><td class="rt-high">80–89</td><td class="rt-high">≥ 90</td><td class="rt-normal">&lt; 120</td></tr>
+              <tr><td>Adults (18–59)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>&lt; 80</td><td class="rt-pre">80–89</td><td class="rt-high">90–99</td><td class="rt-high">≥ 100</td><td class="rt-normal">&lt; 130</td></tr>
+              <tr><td>Elderly (60+)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>&lt; 80</td><td class="rt-pre">80–89</td><td class="rt-high">90–99</td><td class="rt-high">≥ 100</td><td class="rt-normal">&lt; 140</td></tr>
+              <tr><td>Diabetic Target</td><td colspan="5" class="rt-normal"><span class="rt-dot rt-dot-green"></span>Target: &lt; 80 mmHg diastolic, &lt; 130 mmHg systolic</td></tr>
+            </tbody></table>
+            <div class="ranges-note">⚠️ Diabetics should maintain BP below 130/80 mmHg to reduce kidney and heart risk.</div>
+          </div>
+          <div class="rpanel" id="rpanel-bmi">
+            <div class="ranges-intro">BMI = Weight (kg) ÷ Height² (m²). Asian populations face higher risk at lower BMI values.</div>
+            <table class="ranges-table"><thead><tr><th>Age Group</th><th>Underweight</th><th>Normal</th><th>Overweight</th><th>Obese Class 1</th><th>Obese Class 2+</th></tr></thead>
+            <tbody>
+              <tr><td>Young Adults (18–35)</td><td>&lt; 18.5</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>18.5–24.9</td><td class="rt-pre">25.0–29.9</td><td class="rt-high">30.0–34.9</td><td class="rt-high">≥ 35</td></tr>
+              <tr><td>Adults (36–59)</td><td>&lt; 18.5</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>18.5–24.9</td><td class="rt-pre">25.0–29.9</td><td class="rt-high">30.0–34.9</td><td class="rt-high">≥ 35</td></tr>
+              <tr><td>Elderly (60+)</td><td>&lt; 20.0</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>20.0–26.9</td><td class="rt-pre">27.0–29.9</td><td class="rt-high">30.0–34.9</td><td class="rt-high">≥ 35</td></tr>
+            </tbody></table>
+            <div class="ranges-note">⚠️ Asian populations: Overweight ≥ 23, Obese ≥ 27.5 due to higher metabolic risk at lower BMI.</div>
+          </div>
+          <div class="rpanel" id="rpanel-insulin">
+            <div class="ranges-intro">Fasting serum insulin. Units: <strong>µU/mL</strong>. High insulin with normal glucose may indicate early insulin resistance.</div>
+            <table class="ranges-table"><thead><tr><th>Age Group</th><th>Normal Fasting</th><th>Borderline High</th><th>High (Resistance)</th><th>HOMA-IR Normal</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Children (&lt;12)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>2–10</td><td class="rt-pre">11–15</td><td class="rt-high">&gt; 15</td><td class="rt-normal">&lt; 1.0</td><td style="font-size:.71rem;color:var(--slate-400)">Lower range normal</td></tr>
+              <tr><td>Adults (18–59)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>2–25</td><td class="rt-pre">26–35</td><td class="rt-high">&gt; 35</td><td class="rt-normal">&lt; 1.9</td><td style="font-size:.71rem;color:var(--slate-400)">Standard reference</td></tr>
+              <tr><td>Elderly (60+)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>3–25</td><td class="rt-pre">26–35</td><td class="rt-high">&gt; 35</td><td class="rt-normal">&lt; 2.0</td><td style="font-size:.71rem;color:var(--slate-400)">Sensitivity decreases</td></tr>
+            </tbody></table>
+            <div class="ranges-note">⚠️ Insulin is optional. If blank, training median (~80 µU/mL) is used automatically.</div>
+          </div>
+          <div class="rpanel" id="rpanel-hba1c">
+            <div class="ranges-intro">HbA1c reflects average blood sugar over 2–3 months. Units: <strong>%</strong>. Gold standard diagnostic test.</div>
+            <table class="ranges-table"><thead><tr><th>Age Group</th><th>Normal</th><th>Prediabetes</th><th>Diabetes</th><th>Well-Controlled</th><th>Elderly Target</th></tr></thead>
+            <tbody>
+              <tr><td>Children &amp; Teens</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>&lt; 5.7%</td><td class="rt-pre">5.7–6.4%</td><td class="rt-high">≥ 6.5%</td><td>&lt; 7.5%</td><td>—</td></tr>
+              <tr><td>Adults (18–59)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>&lt; 5.7%</td><td class="rt-pre">5.7–6.4%</td><td class="rt-high">≥ 6.5%</td><td>&lt; 7.0%</td><td>—</td></tr>
+              <tr><td>Elderly (60+)</td><td class="rt-normal"><span class="rt-dot rt-dot-green"></span>&lt; 5.7%</td><td class="rt-pre">5.7–6.4%</td><td class="rt-high">≥ 6.5%</td><td>&lt; 7.5%</td><td>7.5–8.0%</td></tr>
+            </tbody></table>
+            <div class="ranges-note">⚠️ HbA1c in this app is estimated from glucose (Nathan formula). Get a lab test for confirmed values.</div>
+          </div>
+          <div class="rpanel" id="rpanel-other">
+            <div class="ranges-intro">Reference ranges for Skin Thickness, Diabetes Pedigree Function (DPF) and Pregnancies.</div>
+            <table class="ranges-table"><thead><tr><th>Parameter</th><th>Adults (18–59)</th><th>Elderly (60+)</th><th>Units</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Skin Thickness (Triceps)</td><td class="rt-normal">10–35 (F) / 8–25 (M)</td><td class="rt-pre">10–30</td><td>mm</td><td style="font-size:.71rem;color:var(--slate-400)">Increases with obesity</td></tr>
+              <tr><td>DPF — Low genetic risk</td><td colspan="2" class="rt-normal"><span class="rt-dot rt-dot-green"></span>0.08–0.40 (no/minimal family history)</td><td>score</td><td></td></tr>
+              <tr><td>DPF — Moderate risk</td><td colspan="2" class="rt-pre"><span class="rt-dot rt-dot-amber"></span>0.41–0.80 (one parent or sibling)</td><td>score</td><td></td></tr>
+              <tr><td>DPF — High genetic risk</td><td colspan="2" class="rt-high"><span class="rt-dot rt-dot-red"></span>0.81–2.50+ (both parents/multiple relatives)</td><td>score</td><td></td></tr>
+              <tr><td>Pregnancies</td><td class="rt-normal">0–3 typical</td><td class="rt-pre">0–6 lifetime</td><td>count</td><td style="font-size:.71rem;color:var(--slate-400)">≥ 4 raises risk</td></tr>
+            </tbody></table>
+            <div class="ranges-note">⚠️ Don't know your DPF? Use 0.5 as a general estimate for moderate family history.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chatbot + Form + Results -->
+  <div class="predict-wrap">
+    <div class="container">
+
+      <!-- Chatbot Card -->
+      <div class="chatbot-card">
+        <div class="chatbot-header">
+          <div class="chatbot-brand">
+            <div class="chatbot-avatar">🤖</div>
+            <div class="chatbot-brand-text">
+              <h3>Diabetes Assistant</h3>
+              <p>Ask anything — symptoms, HbA1c, diet, medications, emergencies &amp; 20+ topics</p>
+            </div>
+          </div>
+          <div class="chatbot-online"><div class="chat-online-dot"></div>Online</div>
+        </div>
+        <div class="chatbot-body">
+          <div class="chat-input-wrap">
+            <input id="chat-input" type="text" placeholder="e.g. What is a normal HbA1c? What foods should a diabetic avoid?" onkeydown="if(event.key==='Enter'){openChat();sendChat()}"/>
+            <button class="chat-send" onclick="openChat();sendChat()">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div id="quick-replies" class="quick-pills"></div>
+          <div class="chat-collapse" id="chat-collapse">
+            <div class="chat-messages" id="chat-messages">
+              <div class="chat-bubble bot">
+                <div class="bubble-title">Hello! I'm your Diabetes Assistant 👋</div>
+                Ask me about symptoms, diet, HbA1c, exercise, blood sugar levels, emergencies and more!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Risk Form -->
+      <div class="form-card">
+        <div class="form-card-top">
+          <div class="form-card-icon">🔬</div>
+          <div>
+            <h2>Health Risk Assessment</h2>
+            <p>Enter your health parameters below — all fields in one place for instant analysis</p>
+          </div>
+        </div>
+        <div id="validation-error" class="validation-error"></div>
+
+        <!-- Row 1: Required Fields -->
+        <div class="fields-section-label">Required Fields</div>
+        <div class="form-row-required">
+          <div class="form-field">
+            <label>Glucose <span class="req">*</span></label>
+            <input type="number" id="glucose" placeholder="120" min="50" max="400" step="0.1" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">mg/dL (50–400)</span>
+          </div>
+          <div class="form-field">
+            <label>Blood Pressure <span class="req">*</span></label>
+            <input type="number" id="blood_pressure" placeholder="80" min="40" max="160" step="0.1" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">mmHg (40–160)</span>
+          </div>
+          <div class="form-field">
+            <label>BMI <span class="req">*</span></label>
+            <input type="number" id="bmi" placeholder="28.5" min="10" max="70" step="0.1" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">kg/m² (10–70)</span>
+          </div>
+          <div class="form-field">
+            <label>Diabetes Pedigree <span class="req">*</span></label>
+            <input type="number" id="dpf" placeholder="0.5" min="0.05" max="3" step="0.01" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">DPF (0.05–3.0)</span>
+          </div>
+          <div class="form-field">
+            <label>Age <span class="req">*</span></label>
+            <input type="number" id="age" placeholder="35" min="1" max="120" step="1" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">Years (1–120)</span>
+          </div>
+        </div>
+
+        <!-- Row 2: Optional Fields -->
+        <div class="fields-section-label">Optional Fields</div>
+        <div class="form-row-optional">
+          <div class="form-field">
+            <label>Pregnancies <span class="opt-tag">opt</span></label>
+            <input type="number" id="pregnancies" placeholder="2" min="0" max="20" step="1" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">Count (0–20)</span>
+          </div>
+          <div class="form-field">
+            <label>Skin Thickness <span class="opt-tag">opt</span></label>
+            <input type="number" id="skin_thickness" placeholder="20" min="0" max="100" step="0.1" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">mm (0–100)</span>
+          </div>
+          <div class="form-field">
+            <label>Insulin <span class="opt-tag">opt</span></label>
+            <input type="number" id="insulin" placeholder="80" min="0" max="900" step="0.1" onkeydown="blockInvalidKeys(event)" oninput="sanitizeInput(this)"/>
+            <span class="fhint">µU/mL (0–900)</span>
+          </div>
+        </div>
+
+        <!-- Row 3: Action Bar -->
+        <div class="form-action-bar">
+          <div class="form-action-bar-left">
+            <div class="form-action-bar-icon">⚡</div>
+            <div class="form-action-bar-text">
+              <strong>Ready to analyse your health data</strong>
+              <span>Fill required fields above, then click Analyse to get your personalised risk report</span>
+            </div>
+          </div>
+          <div class="form-action-bar-btns">
+            <button class="btn-reset" onclick="clearForm()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.96"/></svg>
+              Reset
+            </button>
+            <button class="btn-analyse" onclick="runPrediction()" id="predict-btn">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Analyse Risk
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🔬</div>
+        <h3>Ready to Analyse</h3>
+        <p>Fill in your health parameters above and click "Analyse" to get your personalised diabetes risk report.</p>
+      </div>
+
+      <!-- Results -->
+      <div class="results-wrapper" id="results-wrapper">
+        <div class="result-hero-row">
+          <div class="rh-badge-col">
+            <div class="rh-badge" id="result-badge">🩺</div>
+            <div class="rh-prediction" id="result-title">—</div>
+            <div class="rh-cat" id="result-category">—</div>
+            <div class="urgency-pill" id="urgency-pill">—</div>
+          </div>
+          <div class="rh-meter-col">
+            <div class="rh-meter-top">
+              <span>Diabetes Risk Score</span>
+              <div><span class="risk-big" id="risk-pct-display">0</span><small>%</small></div>
+            </div>
+            <div class="risk-track"><div class="risk-fill" id="risk-bar"></div></div>
+            <div class="risk-ticks">
+              <span class="risk-tick">0%</span>
+              <span class="risk-tick" style="color:var(--emerald)">35% Low</span>
+              <span class="risk-tick" style="color:var(--amber)">65% Medium</span>
+              <span class="risk-tick">100%</span>
+            </div>
+            <div class="rec-msg-bar" id="rec-message">—</div>
+          </div>
+          <div class="rh-conf-col">
+            <div class="conf-dial">
+              <svg width="68" height="68" viewBox="0 0 68 68">
+                <circle cx="34" cy="34" r="27" fill="none" stroke="#E2E8F0" stroke-width="7"/>
+                <circle id="conf-arc" cx="34" cy="34" r="27" fill="none" stroke="#059669" stroke-width="7"
+                  stroke-dasharray="169.6" stroke-dashoffset="169.6" stroke-linecap="round"
+                  style="transition:stroke-dashoffset 1.2s ease,stroke .4s"/>
+              </svg>
+              <div class="conf-score-txt" id="conf-pct-text">0%</div>
+            </div>
+            <div class="conf-label">Confidence Score</div>
+            <span class="conf-badge" id="conf-badge">—</span>
+            <div class="conf-reason-txt" id="conf-reason">—</div>
+          </div>
+        </div>
+
+        <div class="metrics-row">
+          <div class="metric-tile"><div class="m-val" id="m-hba1c">—</div><div class="m-label">HbA1c Est.</div><div class="m-badge" id="m-hba1c-badge">—</div></div>
+          <div class="metric-tile"><div class="m-val" id="m-bmi">—</div><div class="m-label">BMI Status</div><div class="m-badge" id="m-bmi-badge">—</div></div>
+          <div class="metric-tile"><div class="m-val" id="m-glucose">—</div><div class="m-label">Glucose</div><div class="m-badge" id="m-glucose-badge">—</div></div>
+          <div class="metric-tile"><div class="m-val" id="m-bp">—</div><div class="m-label">Blood Pressure</div><div class="m-badge" id="m-bp-badge">—</div></div>
+          <div class="metric-tile"><div class="m-val" id="m-ir">—</div><div class="m-label">Insulin Resistance</div></div>
+          <div class="metric-tile"><div class="m-val" id="m-health">—</div><div class="m-label">Health Score</div><div class="m-badge" id="m-health-badge">—</div></div>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="breakdown-title">Risk Factor Breakdown</div>
+          <div class="bd-grid">
+            <div class="bd-bar-item"><div class="bd-head"><span>Glucose Level</span><span id="bd-glucose">0%</span></div><div class="bd-track"><div class="bd-fill" id="bf-glucose" style="background:var(--rose)"></div></div></div>
+            <div class="bd-bar-item"><div class="bd-head"><span>BMI</span><span id="bd-bmi">0%</span></div><div class="bd-track"><div class="bd-fill" id="bf-bmi" style="background:var(--amber)"></div></div></div>
+            <div class="bd-bar-item"><div class="bd-head"><span>Age Factor</span><span id="bd-age">0%</span></div><div class="bd-track"><div class="bd-fill" id="bf-age" style="background:#7C3AED"></div></div></div>
+            <div class="bd-bar-item"><div class="bd-head"><span>Diabetes Pedigree</span><span id="bd-dpf">0%</span></div><div class="bd-track"><div class="bd-fill" id="bf-dpf" style="background:var(--sky)"></div></div></div>
+            <div class="bd-bar-item"><div class="bd-head"><span>Blood Pressure</span><span id="bd-bp">0%</span></div><div class="bd-track"><div class="bd-fill" id="bf-bp" style="background:var(--teal)"></div></div></div>
+          </div>
+        </div>
+
+        <div class="de-row">
+          <div class="de-card">
+            <div class="de-card-hdr"><div class="de-icon diet-icon-bg">🥗</div><div><h3>Personalised Diet Plan</h3><p id="diet-msg">Your diet recommendations based on risk level</p></div></div>
+            <div class="de-card-body">
+              <div class="food-cols">
+                <div class="food-list eat"><h4>✅ Foods to Eat</h4><div id="food-eat"></div></div>
+                <div class="food-list avoid"><h4>❌ Foods to Avoid</h4><div id="food-avoid"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="de-card">
+            <div class="de-card-hdr"><div class="de-icon ex-icon-bg">🏃</div><div><h3>Exercise Plan</h3><p id="exercise-msg">Your personalised exercise recommendations</p></div></div>
+            <div class="de-card-body">
+              <div class="exercise-list" id="exercise-list"></div>
+              <div class="ex-tips-box"><h4>💪 Exercise Tips</h4><ul id="exercise-tips-list"></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ls-mon-row">
+          <div class="ls-card">
+            <div class="ls-hdr"><div class="ls-hdr-icon">💡</div><h3>Lifestyle Recommendations</h3></div>
+            <div class="ls-body"><div class="lifestyle-grid" id="lifestyle-grid"></div></div>
+          </div>
+          <div class="mon-card">
+            <div class="mon-hdr"><div class="mon-hdr-icon">📋</div><h3>Monitoring Schedule</h3></div>
+            <div class="mon-body">
+              <div class="monitoring-info" id="monitoring-info"></div>
+              <div class="tests-list-wrap"><h4>Recommended Tests</h4><div id="tests-list"></div></div>
+              <table class="targets-table"><thead><tr><th>Measurement</th><th>Target Range</th></tr></thead><tbody id="targets-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="mh-row">
+          <div class="mt-card">
+            <div class="mt-hdr"><div class="mt-hdr-icon">⏰</div><h3>Meal Timing &amp; Tips</h3></div>
+            <div class="mt-body"><ul class="meal-tips-list" id="meal-tips-list"></ul></div>
+          </div>
+          <div class="ht-card">
+            <div class="ht-hdr"><div class="ht-hdr-icon">✅</div><h3>Your 10 Personalised Health Tips</h3></div>
+            <div class="ht-body"><div class="tips-grid" id="tips-grid"></div></div>
+          </div>
+        </div>
+
+        <div class="disclaimer-bar" id="disclaimer">
+          ⚕️ <strong>Medical Disclaimer:</strong> This prediction is for educational purposes only and is not a medical diagnosis. Always consult a qualified doctor before making any health decisions.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────── TAB: DASHBOARD ───────────────── -->
+<div id="tab-dashboard" class="tab-panel">
+
+  <div class="page-topbar">
+    <div class="topbar-breadcrumb">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      <strong>Dashboard</strong>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-accuracy">Analytics Overview</div>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="container">
+      <div style="margin-bottom:20px">
+        <div class="section-kicker">Analytics</div>
+        <h2 class="section-heading">Prediction Dashboard</h2>
+      </div>
+      <div class="dashboard-top">
+        <div class="stat-card"><span class="sc-icon">📊</span><div class="sc-label">Total Predictions</div><div class="sc-val" id="ds-total">—</div><div class="sc-sub">All time</div></div>
+        <div class="stat-card"><span class="sc-icon">🔴</span><div class="sc-label">Diabetic</div><div class="sc-val" id="ds-diabetic" style="color:var(--rose)">—</div><div class="sc-sub" id="ds-diabetic-pct"></div></div>
+        <div class="stat-card"><span class="sc-icon">🟢</span><div class="sc-label">Non-Diabetic</div><div class="sc-val" id="ds-nond" style="color:var(--emerald)">—</div><div class="sc-sub" id="ds-nond-pct"></div></div>
+        <div class="stat-card"><span class="sc-icon">❤️</span><div class="sc-label">Avg Health Score</div><div class="sc-val" id="ds-health">—</div><div class="sc-sub">out of 100</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><h3>Risk Distribution</h3><div class="chart-wrap"><canvas id="chart-risk"></canvas></div></div>
+        <div class="chart-card"><h3>Diabetic vs Non-Diabetic</h3><div class="chart-wrap"><canvas id="chart-outcome"></canvas></div></div>
+        <div class="chart-card"><h3>Recent Risk % History</h3><div class="chart-wrap"><canvas id="chart-history"></canvas></div></div>
+        <div class="chart-card"><h3>Avg Risk % by Level</h3><div class="chart-wrap"><canvas id="chart-avg"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main-content -->
+
+<script>
+const API='http://localhost:5000';
+let chartRisk=null,chartOutcome=null,chartHistory=null,chartAvg=null;
+
+function toggleRanges(){
+  const b=document.getElementById('ranges-body-wrap');
+  const c=document.getElementById('rtb-chevron');
+  b.classList.toggle('open');c.classList.toggle('open');
+}
+function showRTab(name,el){
+  document.querySelectorAll('.rpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('rpanel-'+name).classList.add('active');
+  el.classList.add('active');
+}
+function openChat(){document.getElementById('chat-collapse').classList.add('open')}
+function showTab(name,loadData=false){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item[id^="nav-"]').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const ni=document.getElementById('nav-'+name);
+  if(ni)ni.classList.add('active');
+  if(name==='dashboard')loadDashboard();
+  if(name==='predict')loadQuickReplies();
+}
+function blockInvalidKeys(e){
+  // Block e, E, +, - but NEVER block '.' so decimals can be typed freely
+  if(['e','E','+','-'].includes(e.key)) e.preventDefault();
+}
+function sanitizeInput(el){
+  // Only clean up exponential notation pasted in (e.g. 1e5, 2E10)
+  // Do NOT rewrite el.value on normal keystrokes — it kills decimal typing
+  const v = el.value;
+  if(/[eE]/.test(v)){
+    const num = parseFloat(v);
+    el.value = isFinite(num) ? String(num) : '';
+  }
+  if(/[+\-]/.test(v)){
+    el.value = v.replace(/[+\-]/g, '');
+  }
+}
+function computeConfidence(inputs,hm){
+  const glucose=parseFloat(inputs.glucose)||0;
+  const age=parseFloat(inputs.age)||0;
+  const insulin=inputs.insulin!==null?parseFloat(inputs.insulin):null;
+  const skin=inputs.skin_thickness!==null?parseFloat(inputs.skin_thickness):null;
+  const preg=inputs.pregnancies!==null?parseFloat(inputs.pregnancies):null;
+  const hba1c=hm.hba1c_estimate||0;
+  let filled=0;
+  if(glucose>0)filled++;if(age>0)filled++;if(insulin!==null&&insulin>0)filled++;filled++;
+  let score=filled>=4?92:filled===3?84:filled===2?74:58;
+  const gH=glucose>=126,gP=glucose>=100&&glucose<126,hH=hba1c>=6.5,hP=hba1c>=5.7&&hba1c<6.5;
+  if((gH&&hH)||(!gH&&!gP&&!hH&&!hP))score+=7;
+  else if((gH&&!hH)||(!gH&&hH))score-=15;
+  else if(gP&&hP)score+=4;
+  if(glucose<55||glucose>380)score-=8;if(hba1c>15)score-=5;
+  if(skin!==null)score+=2;if(preg!==null)score+=1;if(!age||age<=0)score-=5;
+  score=Math.max(30,Math.min(99,Math.round(score)));
+  let reason='';
+  if(score>=85)reason='High data completeness with consistent glucose and HbA1c indicators.';
+  else if(score>=70)reason=insulin===null?'Good data provided. Insulin not given — using training median.':'Adequate data with minor inconsistency between glucose and HbA1c.';
+  else if(score>=55)reason='Limited data. Confidence reduced due to missing optional fields.';
+  else reason='Insufficient data for high-confidence analysis.';
+  return{score,reason};
+}
+async function runPrediction(){
+  const btn=document.getElementById('predict-btn');
+  const errDiv=document.getElementById('validation-error');
+  errDiv.style.display='none';
+  const fields=['glucose','blood_pressure','bmi','dpf','age','pregnancies','skin_thickness','insulin'];
+  const payload={};const frontErrors=[];
+  fields.forEach(f=>{
+    let v=document.getElementById(f).value.trim();
+    if(v==='')return;
+    if(/[eE\+\-]/.test(v)){frontErrors.push(`"${f.replace('_',' ')}" contains invalid characters.`);return;}
+    const num=Number(v);
+    if(isNaN(num)||!isFinite(num)){frontErrors.push(`"${f.replace('_',' ')}" is not a valid number.`);return;}
+    payload[f]=v;
+  });
+  if(frontErrors.length>0){errDiv.innerHTML='<ul>'+frontErrors.map(e=>`<li>${e}</li>`).join('')+'</ul>';errDiv.style.display='block';return;}
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analysing...';
+  try{
+    const res=await fetch(`${API}/predict`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(!data.success){errDiv.innerHTML='<ul>'+data.errors.map(e=>`<li>${e}</li>`).join('')+'</ul>';errDiv.style.display='block';return;}
+    displayResult(data);
+  }catch(e){
+    errDiv.innerHTML='Could not connect to the server. Make sure <b>python app.py</b> is running on port 5000.';
+    errDiv.style.display='block';
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Analyse Risk';
+  }
+}
+function displayResult(d){
+  document.getElementById('empty-state').style.display='none';
+  const rw=document.getElementById('results-wrapper');rw.style.display='flex';
+  const conf=computeConfidence(d.inputs_used,d.health_metrics);
+  const circ=2*Math.PI*27;
+  const arc=document.getElementById('conf-arc');
+  setTimeout(()=>{
+    arc.style.strokeDashoffset=circ-(conf.score/100)*circ;
+    arc.style.stroke=conf.score>=85?'#059669':conf.score>=70?'#D97706':'#E11D48';
+    document.getElementById('conf-pct-text').textContent=conf.score+'%';
+    document.getElementById('conf-reason').textContent=conf.reason;
+    const cb=document.getElementById('conf-badge');
+    if(conf.score>=85){cb.textContent='High Confidence';cb.className='conf-badge conf-high';}
+    else if(conf.score>=70){cb.textContent='Moderate Confidence';cb.className='conf-badge conf-mid';}
+    else{cb.textContent='Low Confidence';cb.className='conf-badge conf-low';}
+  },150);
+  const isDiabetic=d.prediction==='Diabetic';
+  const badge=document.getElementById('result-badge');
+  badge.textContent=isDiabetic?'⚠️':'✅';
+  badge.className='rh-badge '+(isDiabetic?'diabetic':'not-diabetic');
+  document.getElementById('result-title').textContent=d.prediction;
+  document.getElementById('result-category').textContent=`${d.risk_category} · ${d.risk_level} Risk`;
+  const urgEl=document.getElementById('urgency-pill');
+  urgEl.textContent=d.urgency_level;
+  urgEl.className='urgency-pill '+(d.urgency_level==='See Doctor Now'?'urgency-now':d.urgency_level==='See Doctor Soon'?'urgency-soon':'urgency-routine');
+  const riskPct=d.risk_percentage;
+  setTimeout(()=>{
+    document.getElementById('risk-pct-display').textContent=riskPct;
+    const bar=document.getElementById('risk-bar');
+    bar.style.width=riskPct+'%';
+    bar.style.background=riskPct>=65?'#E11D48':riskPct>=35?'#D97706':'#059669';
+  },100);
+  const msgEl=document.getElementById('rec-message');
+  msgEl.textContent=d.recommendation_message;
+  msgEl.className='rec-msg-bar '+(d.risk_level==='High'?'high':d.risk_level==='Medium'?'medium':'low');
+  const hm=d.health_metrics;
+  setMetric('m-hba1c',hm.hba1c_estimate+'%','m-hba1c-badge',hm.hba1c_estimate<5.7?['Normal','badge-green']:hm.hba1c_estimate<6.5?['Prediabetes','badge-amber']:['High','badge-red']);
+  setMetric('m-bmi',document.getElementById('bmi').value,'m-bmi-badge',hm.bmi_status==='Normal'?[hm.bmi_status,'badge-green']:hm.bmi_status==='Overweight'?[hm.bmi_status,'badge-amber']:[hm.bmi_status,'badge-red']);
+  setMetric('m-glucose',document.getElementById('glucose').value+' mg/dL','m-glucose-badge',hm.glucose_category==='Normal'?[hm.glucose_category,'badge-green']:hm.glucose_category==='Prediabetes'?[hm.glucose_category,'badge-amber']:[hm.glucose_category,'badge-red']);
+  setMetric('m-bp',document.getElementById('blood_pressure').value+' mmHg','m-bp-badge',hm.bp_status==='Normal'?[hm.bp_status,'badge-green']:hm.bp_status==='Elevated'?[hm.bp_status,'badge-amber']:[hm.bp_status,'badge-red']);
+  document.getElementById('m-ir').textContent=hm.insulin_resistance;
+  setMetric('m-health',hm.health_score+'/100','m-health-badge',hm.health_score>=70?['Good','badge-green']:hm.health_score>=45?['Fair','badge-amber']:['Low','badge-red']);
+  const pb=d.percentage_breakdown;
+  setTimeout(()=>{
+    animateBar('bd-glucose','bf-glucose',pb.glucose_contribution);
+    animateBar('bd-bmi','bf-bmi',pb.bmi_contribution);
+    animateBar('bd-age','bf-age',pb.age_contribution);
+    animateBar('bd-dpf','bf-dpf',pb.dpf_contribution);
+    animateBar('bd-bp','bf-bp',pb.bp_contribution);
+  },200);
+  const recs=d.recommendations;
+  buildDiet(recs.diet);buildExercise(recs.exercise);buildLifestyle(recs.lifestyle);buildMonitoring(recs.monitoring);buildTips(recs.health_tips);
+  document.getElementById('disclaimer').style.display='block';
+  document.getElementById('results-wrapper').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setMetric(vId,val,bId,bInfo){
+  document.getElementById(vId).textContent=val;
+  const b=document.getElementById(bId);
+  if(b&&bInfo){b.textContent=bInfo[0];b.className='m-badge '+bInfo[1];}
+}
+function animateBar(lId,fId,pct){
+  document.getElementById(lId).textContent=pct+'%';
+  document.getElementById(fId).style.width=pct+'%';
+}
+function buildDiet(diet){
+  document.getElementById('diet-msg').textContent=diet.message;
+  document.getElementById('food-eat').innerHTML=diet.eat.map(f=>`<div class="food-item"><span class="fi-icon">✅</span><div><div class="fi-name">${f.food}</div><div class="fi-reason">${f.reason}</div></div></div>`).join('');
+  document.getElementById('food-avoid').innerHTML=diet.avoid.map(f=>`<div class="food-item"><span class="fi-icon">❌</span><div><div class="fi-name">${f.food}</div><div class="fi-reason">${f.reason}</div></div></div>`).join('');
+  document.getElementById('meal-tips-list').innerHTML=diet.meal_tips.map(t=>`<li>${t}</li>`).join('');
+}
+function buildExercise(ex){
+  document.getElementById('exercise-msg').textContent=ex.message;
+  document.getElementById('exercise-list').innerHTML=ex.plan.map(e=>`<div class="exercise-item"><h4>🏃 ${e.type}</h4><div class="ex-meta"><span class="et et-d">⏱ ${e.duration}</span><span class="et et-f">📅 ${e.frequency}</span><span class="et et-i">💪 ${e.intensity}</span></div><div class="ex-benefit">✦ ${e.benefit}</div></div>`).join('');
+  document.getElementById('exercise-tips-list').innerHTML=ex.tips.map(t=>`<li>${t}</li>`).join('');
+}
+function buildLifestyle(ls){
+  const icons={sleep:'😴',stress:'🧘',water:'💧',smoking:'🚭',alcohol:'🍷',weight:'⚖️',checkups:'🏥'};
+  document.getElementById('lifestyle-grid').innerHTML=Object.entries(ls).map(([k,v])=>`<div class="lifestyle-item"><div class="li-icon">${icons[k]||'💡'}</div><div class="li-label">${k.charAt(0).toUpperCase()+k.slice(1)}</div><div class="li-text">${v}</div></div>`).join('');
+}
+function buildMonitoring(mon){
+  document.getElementById('monitoring-info').innerHTML=`<div class="mon-item"><div class="mon-label">Blood Sugar Check</div><div class="mon-val">${mon.blood_sugar_frequency}</div></div><div class="mon-item"><div class="mon-label">HbA1c Test</div><div class="mon-val">${mon.hba1c_frequency}</div></div><div class="mon-item"><div class="mon-label">Doctor Visits</div><div class="mon-val">${mon.doctor_visits}</div></div>`;
+  document.getElementById('tests-list').innerHTML=mon.tests_recommended.map(t=>`<span class="test-badge">${t}</span>`).join('');
+  document.getElementById('targets-body').innerHTML=Object.entries(mon.target_ranges).map(([k,v])=>`<tr><td>${k}</td><td style="font-weight:600;color:var(--emerald)">${v}</td></tr>`).join('');
+}
+function buildTips(tips){
+  document.getElementById('tips-grid').innerHTML=tips.map((t,i)=>`<div class="tip-item"><div class="tip-num">${i+1}</div><div class="tip-text">${t}</div></div>`).join('');
+}
+function clearForm(){
+  ['glucose','blood_pressure','bmi','dpf','age','pregnancies','skin_thickness','insulin'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('validation-error').style.display='none';
+  document.getElementById('empty-state').style.display='block';
+  document.getElementById('results-wrapper').style.display='none';
+}
+async function loadQuickReplies(){
+  try{
+    const res=await fetch(`${API}/chat/topics`);
+    const data=await res.json();
+    if(data.success){
+      const qr=document.getElementById('quick-replies');
+      qr.innerHTML=data.topics.slice(0,8).map(t=>`<button class="qpill" onclick="askTopic('${t.title}')">${t.title}</button>`).join('');
+    }
+  }catch(e){}
+}
+async function askTopic(title){document.getElementById('chat-input').value=title;openChat();await sendChat();}
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim();if(!msg)return;
+  input.value='';openChat();
+  const msgs=document.getElementById('chat-messages');
+  msgs.innerHTML+=`<div class="chat-bubble user">${msg}</div>`;
+  const tId='typing-'+Date.now();
+  msgs.innerHTML+=`<div class="chat-bubble bot" id="${tId}"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  try{
+    const res=await fetch(`${API}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+    const data=await res.json();
+    document.getElementById(tId)?.remove();
+    if(data.success){msgs.innerHTML+=`<div class="chat-bubble bot"><div class="bubble-title">${data.title}</div>${data.response}</div>`;}
+    else{msgs.innerHTML+=`<div class="chat-bubble bot">Sorry, I couldn't process that.</div>`;}
+  }catch(e){
+    document.getElementById(tId)?.remove();
+    msgs.innerHTML+=`<div class="chat-bubble bot">⚠️ Cannot connect to server. Make sure <b>python app.py</b> is running.</div>`;
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+async function loadDashboard(){
+  try{
+    const[sR,hR]=await Promise.all([fetch(`${API}/dashboard/stats`),fetch(`${API}/predictions/history?limit=20`)]);
+    const sD=await sR.json();const hD=await hR.json();
+    if(sD.success){
+      const s=sD.stats;
+      document.getElementById('ds-total').textContent=s.total_predictions;
+      document.getElementById('ds-diabetic').textContent=s.diabetic_count;
+      document.getElementById('ds-nond').textContent=s.non_diabetic_count;
+      document.getElementById('ds-health').textContent=s.avg_health_score+'/100';
+      if(s.total_predictions>0){
+        document.getElementById('ds-diabetic-pct').textContent=Math.round(s.diabetic_count/s.total_predictions*100)+'% of total';
+        document.getElementById('ds-nond-pct').textContent=Math.round(s.non_diabetic_count/s.total_predictions*100)+'% of total';
+      }
+      buildRiskChart(s.risk_distribution);buildOutcomeChart(s.diabetic_count,s.non_diabetic_count);buildAvgChart(s.risk_distribution);
+    }
+    if(hD.success)buildHistoryChart(hD.records);
+  }catch(e){console.warn('Dashboard error:',e);}
+}
+function buildRiskChart(dist){
+  if(chartRisk)chartRisk.destroy();
+  chartRisk=new Chart(document.getElementById('chart-risk').getContext('2d'),{type:'doughnut',data:{labels:['Low','Medium','High'],datasets:[{data:[dist.Low||0,dist.Medium||0,dist.High||0],backgroundColor:['#059669','#D97706','#E11D48'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11,family:"'DM Sans'"},padding:12}}}}});
+}
+function buildOutcomeChart(d,nd){
+  if(chartOutcome)chartOutcome.destroy();
+  chartOutcome=new Chart(document.getElementById('chart-outcome').getContext('2d'),{type:'pie',data:{labels:['Diabetic','Not Diabetic'],datasets:[{data:[d,nd],backgroundColor:['#E11D48','#059669'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11,family:"'DM Sans'"},padding:12}}}}});
+}
+function buildHistoryChart(records){
+  if(chartHistory)chartHistory.destroy();
+  if(!records||records.length===0)return;
+  const labels=records.slice().reverse().map((_,i)=>`#${i+1}`);
+  const vals=records.slice().reverse().map(r=>r.risk_percentage);
+  chartHistory=new Chart(document.getElementById('chart-history').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'Risk %',data:vals,borderColor:'#0EA5E9',backgroundColor:'rgba(14,165,233,.07)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#0EA5E9',tension:.3,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
+}
+function buildAvgChart(dist){
+  if(chartAvg)chartAvg.destroy();
+  chartAvg=new Chart(document.getElementById('chart-avg').getContext('2d'),{type:'bar',data:{labels:['Low Risk','Medium Risk','High Risk'],datasets:[{data:[dist.Low||0,dist.Medium||0,dist.High||0],backgroundColor:['#059669','#D97706','#E11D48'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:10}},beginAtZero:true},x:{ticks:{font:{size:10}}}}}});
+}
+window.addEventListener('DOMContentLoaded',loadQuickReplies);
+</script>
+</body>
+</html>
